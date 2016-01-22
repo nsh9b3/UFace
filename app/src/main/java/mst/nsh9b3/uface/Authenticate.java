@@ -98,17 +98,35 @@ public class Authenticate extends IntentService
             // Get the encryption publicKey
             String[] publicKey = getPublicKey(ftpClient);
 
-            // Encrypt the histogram and timestampedID
+            // FilePath for encrypted file
             String encryptedFilename = null;
+
+            // FilePath for non-encrypted file (if used)
+            String plaintextFilename = null;
             try
             {
-                Log.i(TAG, "Encrypting");
-                encryptedFilename = encryptHistogram(publicKey, timestampedID, stringHist);
-                Log.i(TAG, "Done encrypting");
+//                Log.i(TAG, "Encrypting");
+//                encryptedFilename = encryptHistogram(publicKey, timestampedID, stringHist);
+//                Log.i(TAG, "Done encrypting");
+//
+//                // Send the file to the server for further processing
+//                Log.i(TAG, "Transferring file to Server");
+//                if (sendFileToServer(ftpClient, encryptedFilename))
+//                {
+//                    Log.i(TAG, "Transferred file to Server");
+//                    handler.post(new Runnable()
+//                    {
+//                        @Override
+//                        public void run()
+//                        {
+//                            Toast.makeText(Authenticate.this, "FINISHED", Toast.LENGTH_LONG).show();
+//                        }
+//                    });
+//                }
 
-                // Send the file to the server for further processing
                 Log.i(TAG, "Transferring file to Server");
-                if (sendFileToServer(ftpClient, encryptedFilename))
+                plaintextFilename = createPlaintextFile(stringHist);
+                if (sendFileToServer(ftpClient, plaintextFilename))
                 {
                     Log.i(TAG, "Transferred file to Server");
                     handler.post(new Runnable()
@@ -116,10 +134,11 @@ public class Authenticate extends IntentService
                         @Override
                         public void run()
                         {
-                            Toast.makeText(Authenticate.this, "FINISHED", Toast.LENGTH_LONG).show();
+                            Toast.makeText(Authenticate.this, "Sent non-encrypted file to Server", Toast.LENGTH_LONG).show();
                         }
                     });
                 }
+
             } catch (Exception e)
             {
                 Log.e(TAG, "Error: " + e);
@@ -227,7 +246,7 @@ public class Authenticate extends IntentService
         {
             InputStream input = new FileInputStream(filename);
             String name = filename.split("/")[filename.split("/").length - 1];
-            name = "/ftp/".concat(name);
+            name = "/home/nsh9b3/ftp/".concat(name);
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             ftpClient.setFileTransferMode(FTP.STREAM_TRANSFER_MODE);
             ftpClient.storeFile(name, input);
@@ -306,7 +325,7 @@ public class Authenticate extends IntentService
         try
         {
             OutputStream output = new FileOutputStream(this.getExternalCacheDir() + "/public_key.txt");
-            ftpClient.retrieveFile("/ftp/public_key.txt", output);
+            ftpClient.retrieveFile("/home/nsh9b3/ftp/public_key.txt", output);
             int reply = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(reply))
             {
@@ -406,6 +425,52 @@ public class Authenticate extends IntentService
             for (int i = 0; i < c.length; i++)
             {
                 writer.write(c[i] + " ");
+            }
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+            return null;
+        } finally
+        {
+            try
+            {
+                if (writer != null)
+                {
+                    writer.close();
+                }
+            } catch (IOException e)
+            {
+                Log.e(TAG, "Error: " + e);
+            }
+        }
+        return outputFile.getAbsolutePath();
+    }
+
+    private String createPlaintextFile(String[][] histogram)
+    {
+        // Write the plaintet to a File
+        File outputDir = this.getExternalCacheDir(); // context being the Activity pointer
+        File outputFile = null;
+        try
+        {
+            outputFile = File.createTempFile("plaintextHistogram", ".txt", outputDir);
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+
+            return null;
+        }
+
+        BufferedWriter writer = null;
+        try
+        {
+            writer = new BufferedWriter(new FileWriter(outputFile.getAbsoluteFile()));
+            for (int i = 0; i < histogram.length; i++)
+            {
+                for(int k = 0; k < histogram[i].length; k++)
+                {
+                    writer.write(histogram[i][k] + " ");
+                }
             }
         } catch (Exception e)
         {
