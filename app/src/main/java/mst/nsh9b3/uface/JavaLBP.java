@@ -61,7 +61,10 @@ public class JavaLBP
                 String[] histSec = generateLocalHistogram(i, k, isTop, isLeft);
 
                 // Append this section's histogram to the main histogram
-                histogram[i+k] = histSec;
+                histogram[(i * k) + k] = histSec;
+
+                //TODO: remove this
+                Log.i(TAG, (i * k) + k + "\t" + histogram[(i * k) + k][0]);
             }
         }
 
@@ -72,7 +75,7 @@ public class JavaLBP
     {
         // This grids histogram
         int[] histSec = new int[59];
-        for(int i = 0; i < 59; i++)
+        for (int i = 0; i < 59; i++)
         {
             histSec[i] = 0;
         }
@@ -148,7 +151,7 @@ public class JavaLBP
     private String[] convertToStrings(int[] intHist)
     {
         String[] stringHist = new String[intHist.length];
-        for(int i = 0; i < stringHist.length; i++)
+        for (int i = 0; i < stringHist.length; i++)
         {
             stringHist[i] = String.valueOf(intHist[i]);
         }
@@ -158,6 +161,7 @@ public class JavaLBP
 
     /**
      * Returns the histogram
+     *
      * @return int[][] histogram[grid_size][59]
      */
     public String[][] getHistogram()
@@ -188,7 +192,7 @@ public class JavaLBP
                 {
                     last = ((value >> k) & 1);
                     transitions++;
-                    if(transitions > 2)
+                    if (transitions > 2)
                     {
                         break;
                     }
