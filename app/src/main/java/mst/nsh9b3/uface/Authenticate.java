@@ -82,26 +82,27 @@ public class Authenticate extends IntentService
         // If we can reach the server, continue with the operations
         if (canConnect(ftpClient, serverInfo))
         {
+            Log.i(TAG, "Generating Histogram");
             // Use LBP algorithm to create feature vector of user's face
             JavaLBP LBP = new JavaLBP(faceToAuthenticate.getNativeObjAddr());
-            Log.i(TAG, "Generated Histogram");
 
+            Log.i(TAG, "Getting Histogram");
             // Get the generated histogram
             String[][] stringHist = LBP.getHistogram();
-            Log.i(TAG, "Got Histogram");
 
+            Log.i(TAG, "Creating TimestampedID");
             // Get the timestampedID
             String[] timestampedID = getTimestampedID();
-            Log.i(TAG, "Created TimestampedID");
 
+            Log.i(TAG, "Getting the public Key");
             // Get the encryption publicKey
             String[] publicKey = getPublicKey(ftpClient);
-            Log.i(TAG, "Got the public Key");
 
             // Encrypt the histogram and timestampedID
             String encryptedFilename = null;
             try
             {
+                Log.i(TAG, "Encrypting");
                 encryptedFilename = encryptHistogram(publicKey, timestampedID, stringHist);
                 Log.i(TAG, "Done encrypting");
 
@@ -109,12 +110,13 @@ public class Authenticate extends IntentService
                 Log.i(TAG, "Transferring file to Server");
                 if (sendFileToServer(ftpClient, encryptedFilename))
                 {
+                    Log.i(TAG, "Transferred file to Server");
                     handler.post(new Runnable()
                     {
                         @Override
                         public void run()
                         {
-                            Toast.makeText(Authenticate.this, "FINISHED", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Authenticate.this, "FINISHED", Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -304,7 +306,7 @@ public class Authenticate extends IntentService
         try
         {
             OutputStream output = new FileOutputStream(this.getExternalCacheDir() + "/public_key.txt");
-            ftpClient.retrieveFile("/home/nsh9b3/ftp/public_key.txt", output);
+            ftpClient.retrieveFile("/ftp/public_key.txt", output);
             int reply = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(reply))
             {
@@ -362,7 +364,6 @@ public class Authenticate extends IntentService
         // m = message, c = ciphertext
         BigInteger m;
         BigInteger[] c = new BigInteger[timeStampedID.length + histogram.length * histogram[0].length];
-        Log.i(TAG, timeStampedID.length + histogram.length * histogram[0].length + "");
 
         Log.i(TAG, "Encrypting the timestampedID");
         // Encrypt the timestampedID values first
@@ -380,12 +381,10 @@ public class Authenticate extends IntentService
         {
             for(int k = 0; k < histogram[i].length; k++)
             {
-                Log.i(TAG, "index: " + index + "\ti: " +i + "\tk: " + k);
                 m = new BigInteger(histogram[i][k]);
                 c[index++] = paillerCryptosystem.Encryption(m);
             }
         }
-        Log.i(TAG, "finished");
 
         // Write the ciphertext to a File
         File outputDir = this.getExternalCacheDir(); // context being the Activity pointer

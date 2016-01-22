@@ -68,8 +68,8 @@ public class TakePicture extends Activity implements CameraBridgeViewBase.CvCame
     Rect faceRect;
 
     // Number of pixels for in savedFace
-    public static final int IMAGEWIDTH = 512;
-    public static final int IMAGEHEIGHT = 512;
+    public static final int IMAGEWIDTH = 256;
+    public static final int IMAGEHEIGHT = 256;
 
     // Name of Intent extra key for savedFace
     public static final String INTENTEXTRA = "savedFace";
@@ -241,8 +241,8 @@ public class TakePicture extends Activity implements CameraBridgeViewBase.CvCame
             savedFace = croppedFace.clone();
 
             // Resize the rectangle around the face so it contains mostly just the face
-            int newRowAmount = (int)(savedFace.rows() * 0.85);
-            int newColAmount = (int)(savedFace.cols() * 0.85);
+            int newRowAmount = (int)(savedFace.rows() * 0.90);
+            int newColAmount = (int)(savedFace.cols() * 0.70);
 
             int rowStart = (savedFace.rows() / 2) - (newRowAmount / 2);
             int rowEnd = (savedFace.rows() / 2) + (newRowAmount / 2);

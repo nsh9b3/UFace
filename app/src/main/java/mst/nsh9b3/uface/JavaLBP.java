@@ -26,7 +26,7 @@ public class JavaLBP
     // Default values for simple LBP
     private final int radius = 1;
     private final int neighbors = 8;
-    private final int grid_size = 16;
+    private final int grid_size = 4;
     private final int pixel_width_per_grid = TakePicture.IMAGEWIDTH / (grid_size / (int) Math.sqrt(grid_size));
     private final int pixel_height_per_grid = TakePicture.IMAGEHEIGHT / (grid_size / (int) Math.sqrt(grid_size));
 
@@ -42,6 +42,7 @@ public class JavaLBP
         histogramKeys = new HashMap<>();
         generateKeyMappings(histogramKeys);
 
+        int index = 0;
         for (int i = 0; i < grid_size / (int) Math.sqrt(grid_size); i++)
         {
             // check if this pixel grid is at the top of the image
@@ -61,14 +62,9 @@ public class JavaLBP
                 String[] histSec = generateLocalHistogram(i, k, isTop, isLeft);
 
                 // Append this section's histogram to the main histogram
-                histogram[(i * k) + k] = histSec;
-
-                //TODO: remove this
-                Log.i(TAG, (i * k) + k + "\t" + histogram[(i * k) + k][0]);
+                histogram[index++] = histSec;
             }
         }
-
-        Log.i(TAG, "what is this: " + histogram[7][0]);
     }
 
     private String[] generateLocalHistogram(int row, int column, boolean atTop, boolean atLeft)
