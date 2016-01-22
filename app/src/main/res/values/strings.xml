@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">UFace</string>
+
+    <!--Main Activity-->
+    <string name="uFace_OptionsButton">Options</string>
+    <string name="uFace_PictureButton">Take Pic</string>
+    <string name="uFace_AuthenticateButton">Authenticate</string>
+
+    <!--Options Activity-->
+    <string name="uFace_Options_FTPAddress">FTP Address</string>
+    <string name="uFace_Options_FTPPort">FTP Port</string>
+    <string name="uFace_Options_FTPUsername">Username</string>
+    <string name="uFace_Options_FTPPassword">Password</string>
+    <string name="uFace_Options_SaveInfoButton">Save</string>
+    <string name="uFace_Options_ResetInfoButton">Reset</string>
+
+    <!--SharedPreferences Names-->
+    <string name="uFace_sharedPrefs_FTPAddress">FTP Address</string>
+    <string name="uFace_sharedPrefs_FTPPort">FTP Port</string>
+    <string name="uFace_sharedPrefs_FTPUsername">FTP Username</string>
+    <string name="uFace_sharedPrefs_FTPPassword">FTP Password</string>
+</resources>

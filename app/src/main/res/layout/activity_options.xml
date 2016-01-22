@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="mst.nsh9b3.uface.Options"
+    android:background="@color/background_material_dark">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="2">
+
+        <EditText
+            android:id="@+id/uFace_Options_FTPAddress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/uFace_Options_FTPAddress"
+            android:textColor="#ffffff"/>
+
+        <EditText
+            android:id="@+id/uFace_Options_FTPPort"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/uFace_Options_FTPPort"
+            android:textColor="#ffffff"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="2">
+
+        <EditText
+            android:id="@+id/uFace_Options_FTPUsername"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/uFace_Options_FTPUsername"
+            android:textColor="#ffffff"/>
+
+        <EditText
+            android:id="@+id/uFace_Options_FTPPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/uFace_Options_FTPPassword"
+            android:inputType="textPassword"
+            android:textColor="#ffffff"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/uFace_Options_SaveInfoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/uFace_Options_SaveInfoButton"
+        android:onClick="onClickSaveOptions"/>
+
+    <Button
+        android:id="@+id/uFace_Options_ResetInfoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/uFace_Options_ResetInfoButton"
+        android:onClick="onClickResetOptions"/>
+
+</LinearLayout>
