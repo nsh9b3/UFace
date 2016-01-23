@@ -105,28 +105,13 @@ public class Authenticate extends IntentService
             String plaintextFilename = null;
             try
             {
-//                Log.i(TAG, "Encrypting");
-//                encryptedFilename = encryptHistogram(publicKey, timestampedID, stringHist);
-//                Log.i(TAG, "Done encrypting");
-//
-//                // Send the file to the server for further processing
-//                Log.i(TAG, "Transferring file to Server");
-//                if (sendFileToServer(ftpClient, encryptedFilename))
-//                {
-//                    Log.i(TAG, "Transferred file to Server");
-//                    handler.post(new Runnable()
-//                    {
-//                        @Override
-//                        public void run()
-//                        {
-//                            Toast.makeText(Authenticate.this, "FINISHED", Toast.LENGTH_LONG).show();
-//                        }
-//                    });
-//                }
+                Log.i(TAG, "Encrypting");
+                encryptedFilename = encryptHistogram(publicKey, timestampedID, stringHist);
+                Log.i(TAG, "Done encrypting");
 
+                // Send the file to the server for further processing
                 Log.i(TAG, "Transferring file to Server");
-                plaintextFilename = createPlaintextFile(stringHist);
-                if (sendFileToServer(ftpClient, plaintextFilename))
+                if (sendFileToServer(ftpClient, encryptedFilename))
                 {
                     Log.i(TAG, "Transferred file to Server");
                     handler.post(new Runnable()
@@ -134,10 +119,25 @@ public class Authenticate extends IntentService
                         @Override
                         public void run()
                         {
-                            Toast.makeText(Authenticate.this, "Sent non-encrypted file to Server", Toast.LENGTH_LONG).show();
+                            Toast.makeText(Authenticate.this, "FINISHED", Toast.LENGTH_LONG).show();
                         }
                     });
                 }
+
+//                Log.i(TAG, "Transferring file to Server");
+//                plaintextFilename = createPlaintextFile(stringHist);
+//                if (sendFileToServer(ftpClient, plaintextFilename))
+//                {
+//                    Log.i(TAG, "Transferred file to Server");
+//                    handler.post(new Runnable()
+//                    {
+//                        @Override
+//                        public void run()
+//                        {
+//                            Toast.makeText(Authenticate.this, "Sent non-encrypted file to Server", Toast.LENGTH_LONG).show();
+//                        }
+//                    });
+//                }
 
             } catch (Exception e)
             {
@@ -246,7 +246,7 @@ public class Authenticate extends IntentService
         {
             InputStream input = new FileInputStream(filename);
             String name = filename.split("/")[filename.split("/").length - 1];
-            name = "/home/nsh9b3/ftp/".concat(name);
+            name = "/ftp/".concat(name);
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             ftpClient.setFileTransferMode(FTP.STREAM_TRANSFER_MODE);
             ftpClient.storeFile(name, input);

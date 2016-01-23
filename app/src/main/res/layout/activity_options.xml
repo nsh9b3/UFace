@@ -69,4 +69,12 @@
         android:text="@string/uFace_Options_ResetInfoButton"
         android:onClick="onClickResetOptions"/>
 
+    <Button
+        android:id="@+id/uFace_Options_TestConnectionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/uFace_Options_TestConnectionButton"
+        android:onClick="onClickTestConnectionOptions"/>
+
 </LinearLayout>

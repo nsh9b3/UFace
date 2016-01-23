@@ -13,6 +13,7 @@
     <string name="uFace_Options_FTPPassword">Password</string>
     <string name="uFace_Options_SaveInfoButton">Save</string>
     <string name="uFace_Options_ResetInfoButton">Reset</string>
+    <string name="uFace_Options_TestConnectionButton">Test</string>
 
     <!--SharedPreferences Names-->
     <string name="uFace_sharedPrefs_FTPAddress">FTP Address</string>

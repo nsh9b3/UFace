@@ -2,6 +2,7 @@ package mst.nsh9b3.uface;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -42,6 +43,8 @@ public class Options extends Activity
 
         // Setup the sharedPreferences
         setupSharedPref();
+
+        //
     }
 
     /**
@@ -123,5 +126,59 @@ public class Options extends Activity
         FTPPasswordEditText.setText(FTPPassword);
 
         Toast.makeText(this, "Reset SharedPreferences", Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Test the saved parameters to see if a connection is possible
+     * @param view the selected view
+     */
+    public void onClickTestConnectionOptions(View view)
+    {
+        final String[] serverInfo = new String[4];
+        serverInfo[0] = sharedPref.getString(getString(R.string.uFace_sharedPrefs_FTPAddress), getString(R.string.uFace_sharedPrefs_FTPAddress));
+        serverInfo[1] = sharedPref.getString(getString(R.string.uFace_sharedPrefs_FTPPort), getString(R.string.uFace_sharedPrefs_FTPPort));
+        serverInfo[2] = sharedPref.getString(getString(R.string.uFace_sharedPrefs_FTPUsername), getString(R.string.uFace_sharedPrefs_FTPUsername));
+        serverInfo[3] = sharedPref.getString(getString(R.string.uFace_sharedPrefs_FTPPassword), getString(R.string.uFace_sharedPrefs_FTPPassword));
+
+
+        TestFTPConnection test = new TestFTPConnection(serverInfo);
+        test.execute();
+    }
+
+    private class TestFTPConnection extends AsyncTask<Void, Void, Void>
+    {
+        boolean canConnect = false;
+        String[] serverInfo;
+        FTP ftp;
+
+        public TestFTPConnection(String[] serverInfo)
+        {
+            this.serverInfo = serverInfo;
+            this.ftp = new FTP(serverInfo);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params)
+        {
+        if(ftp.canConnect())
+        {
+            canConnect = true;
+        }
+            else
+        {
+            canConnect = false;
+        }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid)
+        {
+            super.onPostExecute(aVoid);
+            if(canConnect)
+                Toast.makeText(Options.this, "Connected", Toast.LENGTH_SHORT).show();
+            else
+                Toast.makeText(Options.this, "Cannot Connect", Toast.LENGTH_SHORT).show();
+        }
     }
 }
