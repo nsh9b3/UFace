@@ -30,13 +30,16 @@ public class JavaLBP
     private final int pixel_width_per_grid = TakePicture.IMAGEWIDTH / (grid_size / (int) Math.sqrt(grid_size));
     private final int pixel_height_per_grid = TakePicture.IMAGEHEIGHT / (grid_size / (int) Math.sqrt(grid_size));
 
+    // Number of bins for LBP
+    private final int BINS = 59;
+
     public JavaLBP(long nativeFaceAddress)
     {
         // Grab the OpenCV matrix based on the provided memory location
         faceMat = new Mat(nativeFaceAddress);
 
         // Histogram containing the histogram of each individual element in the grid
-        histogram = new String[grid_size][59];
+        histogram = new String[grid_size][BINS];
 
         // Keys used to properly list uniform values
         histogramKeys = new HashMap<>();
@@ -70,8 +73,8 @@ public class JavaLBP
     private String[] generateLocalHistogram(int row, int column, boolean atTop, boolean atLeft)
     {
         // This grids histogram
-        int[] histSec = new int[59];
-        for (int i = 0; i < 59; i++)
+        int[] histSec = new int[BINS];
+        for (int i = 0; i < histSec.length; i++)
         {
             histSec[i] = 0;
         }

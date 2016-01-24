@@ -9,7 +9,9 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by nick on 1/23/16.
@@ -22,18 +24,21 @@ public class FTP
 
     private String[] serverInfo;
 
-    public FTP(String[] serverInfo)
+    private Context context;
+
+    public FTP(Context context, String[] serverInfo)
     {
+        this.context = context;
         this.serverInfo = serverInfo;
         ftpClient = new FTPClient();
     }
 
     /**
      * Attempt a connection with the provided information
-     *
-     * @return boolean as to whether or not a connection was made
+     * @param disconnect boolean as to whether the connection should be kept or not
+     * @return boolean as to whether or not a connection can be made
      */
-    public boolean canConnect()
+    public boolean canConnect(boolean disconnect)
     {
         boolean canConnect = false;
 
@@ -60,7 +65,8 @@ public class FTP
             }
         } finally
         {
-            ftpDisconnect();
+            if(disconnect)
+                ftpDisconnect();
         }
         return canConnect;
     }
@@ -107,10 +113,39 @@ public class FTP
         }
     }
 
+    public String[] getPublicKey()
+    {
+        String[] publicKey = null;
+
+        try
+        {
+            OutputStream output = new FileOutputStream(context.getExternalCacheDir() + "/public_key.txt");
+            ftpClient.retrieveFile("public_key.txt", output);
+            int reply = ftpClient.getReplyCode();
+            if (!FTPReply.isPositiveCompletion(reply))
+            {
+                Log.e(TAG, "Apache Error - Reply Code: " + reply);
+
+                ftpClient.logout();
+                ftpClient.disconnect();
+
+                return null;
+            } else
+            {
+                publicKey = Utilities.readValuesInFile(context.getExternalCacheDir() + "/public_key.txt");
+            }
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+        }
+
+        return publicKey;
+    }
+
     /***
      * Disconnects from the FTP Server
      */
-    private void ftpDisconnect()
+    public void ftpDisconnect()
     {
         try
         {

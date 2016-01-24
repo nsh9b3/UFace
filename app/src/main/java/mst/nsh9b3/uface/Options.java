@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import java.math.BigInteger;
 
 /**
  * Used for setting up and maintaining sharedpreferences.
@@ -44,7 +47,14 @@ public class Options extends Activity
         // Setup the sharedPreferences
         setupSharedPref();
 
-        //
+        BigInteger test = new BigInteger(new byte[]{(byte)(0xF8), (byte)0x23});
+//        for(int i = 0; i < 8; i++)
+//            test = test.setBit(i);
+        byte[] solution = test.toByteArray();
+        for(int i = 0; i < solution.length; i++)
+        {
+            Log.d(TAG, "" + String.format("%8s", Integer.toBinaryString(solution[i] & 0xFF)).replace(' ', '0'));
+        }
     }
 
     /**
@@ -145,6 +155,10 @@ public class Options extends Activity
         test.execute();
     }
 
+    /**
+     * This class is used exclusively to test if the parameters used for the ftp client are valid.
+     * Will output to the screen whether a connection can be made or not.
+     */
     private class TestFTPConnection extends AsyncTask<Void, Void, Void>
     {
         boolean canConnect = false;
@@ -154,13 +168,13 @@ public class Options extends Activity
         public TestFTPConnection(String[] serverInfo)
         {
             this.serverInfo = serverInfo;
-            this.ftp = new FTP(serverInfo);
+            this.ftp = new FTP(Options.this, serverInfo);
         }
 
         @Override
         protected Void doInBackground(Void... params)
         {
-        if(ftp.canConnect())
+        if(ftp.canConnect(true))
         {
             canConnect = true;
         }
