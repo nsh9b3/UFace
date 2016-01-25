@@ -16,13 +16,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.UUID;
 
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
- * <p/>
+ * <p>
  * TODO: Customize class - update intent actions and extra parameters.
  */
 public class Authenticate extends IntentService
@@ -79,11 +80,11 @@ public class Authenticate extends IntentService
 
             Log.i(TAG, "Getting Histogram");
             // Get the generated histogram
-            String[][] stringHist = LBP.getHistogram();
+            byte[] byteHist = LBP.getByteHist();
 
             Log.i(TAG, "Creating TimestampedID");
             // Get the timestampedID
-            String[] timestampedID = getTimestampedID();
+            String timestampedID = getTimestampedID();
 
             Log.i(TAG, "Getting the public Key");
             // Get the encryption publicKey
@@ -97,12 +98,26 @@ public class Authenticate extends IntentService
             try
             {
                 Log.i(TAG, "Encrypting");
-                encryptedFilename = encryptHistogram(publicKey, timestampedID, stringHist);
-                Log.i(TAG, "Done encrypting");
+                // Encrypt the the values using the public key
+                encryptedFilename = encryptHistogram(publicKey, timestampedID, byteHist);
 
                 // Send the file to the server for further processing
                 Log.i(TAG, "Transferring file to Server");
                 if (ftp.sendFileToServer(encryptedFilename))
+                {
+                    Log.i(TAG, "Transferred file to Server");
+                    handler.post(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            Toast.makeText(Authenticate.this, "FINISHED", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+
+                plaintextFilename = createPlaintextFile(timestampedID, byteHist);
+                if (ftp.sendFileToServer(plaintextFilename))
                 {
                     Log.i(TAG, "Transferred file to Server");
                     handler.post(new Runnable()
@@ -140,9 +155,9 @@ public class Authenticate extends IntentService
         return serverInfo;
     }
 
-    private String[] getTimestampedID()
+    private String getTimestampedID()
     {
-        String[] timestampedID = new String[2];
+        String timestampedID;
 
         // Get unique ID
         final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
@@ -152,14 +167,13 @@ public class Authenticate extends IntentService
         tmSerial = "" + tm.getSimSerialNumber();
         androidId = "" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
 
-        UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
+        UUID deviceUuid = new UUID(androidId.hashCode(), ((long) tmDevice.hashCode() << 32) | tmSerial.hashCode());
         String deviceId = deviceUuid.toString();
 
         // Get timestamp
         String timestamp = "" + System.nanoTime();
 
-        timestampedID[0] = tmDevice.concat(tmSerial);
-        timestampedID[1] = timestamp;
+        timestampedID = tmDevice.concat(tmSerial).concat(timestamp);
 
         return timestampedID;
     }
@@ -167,8 +181,9 @@ public class Authenticate extends IntentService
 
     /**
      * Encrypts the unique identifier and the histogram
-     * @param publicKey  String[] containing the public key for Paillier encryption.
-     *                   Index 0 is n, index 1 is g, index 2 is the bitlength
+     *
+     * @param publicKey String[] containing the public key for Paillier encryption.
+     *                  Index 0 is n, index 1 is g, index 2 is the bitlength
      * @param histogram String[] containing the histogram and unique ID
      * @return String for the name of the created encrypted file
      * @throws Exception
@@ -176,7 +191,7 @@ public class Authenticate extends IntentService
     private String encryptHistogram(String[] publicKey, String[] timeStampedID, String[][] histogram) throws Exception
     {
         // Create a cryptosystem for encryption
-        PaillierEncryption paillerCryptosystem =  new PaillierEncryption(publicKey[0], publicKey[1], publicKey[2]);
+        PaillierEncryption paillerCryptosystem = new PaillierEncryption(publicKey[0], publicKey[1], publicKey[2]);
 
         // m = message, c = ciphertext
         BigInteger m;
@@ -196,11 +211,77 @@ public class Authenticate extends IntentService
         // Encrypt each value in the histogram
         for (int i = 0; i < histogram.length; i++)
         {
-            for(int k = 0; k < histogram[i].length; k++)
+            for (int k = 0; k < histogram[i].length; k++)
             {
                 m = new BigInteger(histogram[i][k]);
                 c[index++] = paillerCryptosystem.Encryption(m);
             }
+        }
+
+        // Write the ciphertext to a File
+        File outputDir = this.getExternalCacheDir(); // context being the Activity pointer
+        File outputFile = null;
+        try
+        {
+            outputFile = File.createTempFile("encryptedHistogram", ".txt", outputDir);
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+
+            return null;
+        }
+
+        BufferedWriter writer = null;
+        try
+        {
+            writer = new BufferedWriter(new FileWriter(outputFile.getAbsoluteFile()));
+            for (int i = 0; i < c.length; i++)
+            {
+                writer.write(c[i] + " ");
+            }
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+            return null;
+        } finally
+        {
+            try
+            {
+                if (writer != null)
+                {
+                    writer.close();
+                }
+            } catch (IOException e)
+            {
+                Log.e(TAG, "Error: " + e);
+            }
+        }
+        return outputFile.getAbsolutePath();
+    }
+
+    private String encryptHistogram(String[] publicKey, String timeStampedID, byte[] histogram) throws Exception
+    {
+        // Create a cryptosystem for encryption
+        PaillierEncryption paillerCryptosystem = new PaillierEncryption(publicKey[0], publicKey[1], publicKey[2]);
+
+        // m = message, c = ciphertext
+        BigInteger m;
+        BigInteger[] c = new BigInteger[histogram.length + 1];
+
+        int index = 0;
+
+        Log.i(TAG, "Encrypting the timestampedID");
+        // Encrypt the timestampedID values first
+        m = new BigInteger(timeStampedID);
+        c[index++] = paillerCryptosystem.Encryption(m);
+
+        Log.i(TAG, "Encrypting the histogram");
+        // Encrypt each value in the histogram
+        int maxIterations = histogram.length / PaillierEncryption.number_of_bits;
+        for (int i = 0; i <= maxIterations; i++)
+        {
+            m = new BigInteger(Arrays.copyOfRange(histogram, 128 * i, 128 * (i + 1)));
+            c[index++] = paillerCryptosystem.Encryption(m);
         }
 
         // Write the ciphertext to a File
@@ -265,10 +346,54 @@ public class Authenticate extends IntentService
             writer = new BufferedWriter(new FileWriter(outputFile.getAbsoluteFile()));
             for (int i = 0; i < histogram.length; i++)
             {
-                for(int k = 0; k < histogram[i].length; k++)
+                for (int k = 0; k < histogram[i].length; k++)
                 {
                     writer.write(histogram[i][k] + " ");
                 }
+            }
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+            return null;
+        } finally
+        {
+            try
+            {
+                if (writer != null)
+                {
+                    writer.close();
+                }
+            } catch (IOException e)
+            {
+                Log.e(TAG, "Error: " + e);
+            }
+        }
+        return outputFile.getAbsolutePath();
+    }
+
+    private String createPlaintextFile(String timestampedID, byte[] histogram)
+    {
+        // Write the plaintet to a File
+        File outputDir = this.getExternalCacheDir(); // context being the Activity pointer
+        File outputFile = null;
+        try
+        {
+            outputFile = File.createTempFile("plaintextHistogram", ".txt", outputDir);
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+
+            return null;
+        }
+
+        BufferedWriter writer = null;
+        try
+        {
+            writer = new BufferedWriter(new FileWriter(outputFile.getAbsoluteFile()));
+            writer.write(timestampedID + " ");
+            for (int i = 0; i < histogram.length; i++)
+            {
+                writer.write(Integer.toBinaryString(histogram[i] & 0xff).replace(' ', '0') + " ");
             }
         } catch (Exception e)
         {

@@ -36,11 +36,6 @@ public class JavaLBP
     // Number of bins for LBP
     private final int BINS = 59;
 
-    //
-    public static final int pixels_per_grid = pixel_height_per_grid * pixel_width_per_grid;
-    public static final int max_bits_per_grid = (int) ((Math.log(pixels_per_grid)) / (Math.log(2)));
-    public static final int concatenated_values = (int)Math.floor(PaillierEncryption.number_of_bits / max_bits_per_grid);
-
     public JavaLBP(long nativeFaceAddress)
     {
         // Grab the OpenCV matrix based on the provided memory location

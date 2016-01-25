@@ -81,7 +81,7 @@ public class FTP
         {
             InputStream input = new FileInputStream(filename);
             String name = filename.split("/")[filename.split("/").length - 1];
-            name = "/".concat(name);
+            name = "".concat(name);
             ftpClient.setFileType(org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE);
             ftpClient.setFileTransferMode(org.apache.commons.net.ftp.FTP.STREAM_TRANSFER_MODE);
             ftpClient.storeFile(name, input);

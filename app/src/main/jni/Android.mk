@@ -5,7 +5,7 @@ include $(CLEAR_VARS)
 # OpenCV
 OPENCV_CAMERA_MODULES   := on
 OPENCV_INSTALL_MODULES  := on
-include /home/nick/Android/OpenCV/sdk/native/jni/OpenCV.mk
+include /home/nsh9b3/Android/OpenCV/sdk/native/jni/OpenCV.mk
 # OpenCV
 
 LOCAL_LDLIBS    := -llog
