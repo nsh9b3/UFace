@@ -4,6 +4,8 @@ import android.util.Log;
 
 import org.opencv.core.Mat;
 
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -21,7 +23,8 @@ public class JavaLBP
     HashMap<Integer, Integer> histogramKeys;
 
     // Generated Histogram
-    String[][] histogram;
+    int[][] histogram;
+    byte[] byteHist;
 
     // Default values for simple LBP
     private final int radius = 1;
@@ -44,7 +47,7 @@ public class JavaLBP
         faceMat = new Mat(nativeFaceAddress);
 
         // Histogram containing the histogram of each individual element in the grid
-        histogram = new String[grid_size][BINS];
+        histogram = new int[grid_size][BINS];
 
         // Keys used to properly list uniform values
         histogramKeys = new HashMap<>();
@@ -67,15 +70,34 @@ public class JavaLBP
                     isLeft = true;
 
                 // Generate the histogram for this section of the grid
-                String[] histSec = generateLocalHistogram(i, k, isTop, isLeft);
+                int[] histSec = generateLocalHistogram(i, k, isTop, isLeft);
 
                 // Append this section's histogram to the main histogram
                 histogram[index++] = histSec;
             }
         }
+
+        // Convert to bytes and combine into sections so that less encryptions occur
+        int[] histValues = getIntArray(histogram);
+        convertToBytes(histValues);
     }
 
-    private String[] generateLocalHistogram(int row, int column, boolean atTop, boolean atLeft)
+    private int[] getIntArray(int[][] histogram)
+    {
+        int[] histValues = new int[grid_size * BINS];
+        int index = 0;
+        for(int i = 0; i < histogram.length; i++)
+        {
+            for(int k = 0; k < histogram[i].length; k++)
+            {
+                histValues[index++] = histogram[i][k];
+            }
+        }
+
+        return histValues;
+    }
+
+    private int[] generateLocalHistogram(int row, int column, boolean atTop, boolean atLeft)
     {
         // This grids histogram
         int[] histSec = new int[BINS];
@@ -150,9 +172,7 @@ public class JavaLBP
             }
         }
 
-        convertToBytes(histSec);
-
-        return convertToStrings(histSec);
+        return histSec;
     }
 
     private String[] convertToStrings(int[] intHist)
@@ -168,30 +188,29 @@ public class JavaLBP
 
     private void convertToBytes(int[] intHist)
     {
-
+        byteHist = new byte[(int) Math.ceil(intHist.length * 1.5)];
+        int index = 0;
+        byte top = 0x00;
+        byte bot;
         for(int i = 0; i < intHist.length; i++)
         {
-            byte[] byteHist = new byte[concatenated_values];
-            byte first4 = 0x00;
-            byte mid4 = 0x00;
-            byte last4 = 0x00;
-            int current;
-            for(int k = 0; k < concatenated_values; k++)
+            int current = intHist[i];
+            if(i % 2 == 0)
             {
-
-                if(k % 3 == 0)
-                {
-                    current = intHist[i++];
-                    mid4 = (byte)(current >>> 4 & 0x0F);
-                    byteHist[k++] = (byte)(first4|mid4);
-
-                    last4 = (byte)(current & 0x0F);
-                    current = intHist[i++];
-                    first4 = (byte)(current >>> 4 & 0xF0);
-                    byteHist[k++] = (byte)(last4 | first4);
-                }
+                bot = (byte) (current >>> 8);
+                byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
+                top = (byte) current;
+                bot = (byte) current;
+                byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
+            } else
+            {
+                top = (byte) (current >>> 4);
+                bot = (byte) (current >>> 4);
+                byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
+                top = (byte) (current << 4);
             }
         }
+//        BigInteger test = new BigInteger(Arrays.copyOfRange(byteHist, 0, 128));
     }
 
     /**
@@ -199,9 +218,14 @@ public class JavaLBP
      *
      * @return int[][] histogram[grid_size][59]
      */
-    public String[][] getHistogram()
+    public int[][] getHistogram()
     {
         return histogram;
+    }
+
+    public byte[] getByteHist()
+    {
+        return byteHist;
     }
 
     /**

@@ -44,11 +44,11 @@ public class MainActivity extends Activity
         faceMat = null;
 
 
-        Log.d(TAG, "" + String.format("%12s", Integer.toBinaryString(3254 & 0xFFF)).replace(' ', '0'));
-        Log.d(TAG, Integer.toBinaryString((3254) & 0xFF).replace(' ','0') + "");
-        Log.d(TAG, (byte)(3254 & 0xFF) + "");
-        Log.d(TAG, Integer.toBinaryString((3254 >>> 8) & 0xFF).replace(' ','0') + "");
-        Log.d(TAG, (byte)(3254 >>> 8 & 0x0F) + "");
+        int testValue = 3254;
+        Log.d(TAG, Integer.toBinaryString(testValue & 0xFFF).replace(' ', '0'));
+        Log.d(TAG, Integer.toBinaryString((testValue >>> 8) ).replace(' ', '0') + "");
+        Log.d(TAG, Integer.toBinaryString((testValue >>> 4) & 0x0f).replace(' ','0') + "");
+        Log.d(TAG, Integer.toBinaryString(((testValue >>> 4) & 0xf0) | ((testValue >>> 4) & 0x0f)).replace(' ', '0') + "");
 
 //        BigInteger test = new BigInteger(new byte[]{(byte)255, (byte)102});
 ////        for(int i = 0; i < 8; i++)
