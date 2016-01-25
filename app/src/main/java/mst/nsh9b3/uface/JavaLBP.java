@@ -26,12 +26,17 @@ public class JavaLBP
     // Default values for simple LBP
     private final int radius = 1;
     private final int neighbors = 8;
-    private final int grid_size = 4;
-    private final int pixel_width_per_grid = TakePicture.IMAGEWIDTH / (grid_size / (int) Math.sqrt(grid_size));
-    private final int pixel_height_per_grid = TakePicture.IMAGEHEIGHT / (grid_size / (int) Math.sqrt(grid_size));
+    private static final int grid_size = 16;
+    private static final int pixel_width_per_grid = TakePicture.IMAGEWIDTH / (grid_size / (int) Math.sqrt(grid_size));
+    private static final int pixel_height_per_grid = TakePicture.IMAGEHEIGHT / (grid_size / (int) Math.sqrt(grid_size));
 
     // Number of bins for LBP
     private final int BINS = 59;
+
+    //
+    public static final int pixels_per_grid = pixel_height_per_grid * pixel_width_per_grid;
+    public static final int max_bits_per_grid = (int) ((Math.log(pixels_per_grid)) / (Math.log(2)));
+    public static final int concatenated_values = (int)Math.floor(PaillierEncryption.number_of_bits / max_bits_per_grid);
 
     public JavaLBP(long nativeFaceAddress)
     {
@@ -144,6 +149,9 @@ public class JavaLBP
                     histSec[histSec.length - 1]++;
             }
         }
+
+        convertToBytes(histSec);
+
         return convertToStrings(histSec);
     }
 
@@ -156,6 +164,34 @@ public class JavaLBP
         }
 
         return stringHist;
+    }
+
+    private void convertToBytes(int[] intHist)
+    {
+
+        for(int i = 0; i < intHist.length; i++)
+        {
+            byte[] byteHist = new byte[concatenated_values];
+            byte first4 = 0x00;
+            byte mid4 = 0x00;
+            byte last4 = 0x00;
+            int current;
+            for(int k = 0; k < concatenated_values; k++)
+            {
+
+                if(k % 3 == 0)
+                {
+                    current = intHist[i++];
+                    mid4 = (byte)(current >>> 4 & 0x0F);
+                    byteHist[k++] = (byte)(first4|mid4);
+
+                    last4 = (byte)(current & 0x0F);
+                    current = intHist[i++];
+                    first4 = (byte)(current >>> 4 & 0xF0);
+                    byteHist[k++] = (byte)(last4 | first4);
+                }
+            }
+        }
     }
 
     /**

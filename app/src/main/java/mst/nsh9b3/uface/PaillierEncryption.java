@@ -24,6 +24,8 @@ public class PaillierEncryption
 
     private int bitLength;
 
+    public static final int number_of_bits = 1024;
+
     public PaillierEncryption() throws Exception
     {
         this(512, 64);

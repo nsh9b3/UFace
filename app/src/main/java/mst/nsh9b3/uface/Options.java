@@ -46,15 +46,6 @@ public class Options extends Activity
 
         // Setup the sharedPreferences
         setupSharedPref();
-
-        BigInteger test = new BigInteger(new byte[]{(byte)(0xF8), (byte)0x23});
-//        for(int i = 0; i < 8; i++)
-//            test = test.setBit(i);
-        byte[] solution = test.toByteArray();
-        for(int i = 0; i < solution.length; i++)
-        {
-            Log.d(TAG, "" + String.format("%8s", Integer.toBinaryString(solution[i] & 0xFF)).replace(' ', '0'));
-        }
     }
 
     /**

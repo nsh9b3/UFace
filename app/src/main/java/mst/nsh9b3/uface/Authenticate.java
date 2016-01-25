@@ -11,16 +11,10 @@ import android.widget.Toast;
 
 import org.opencv.core.Mat;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigInteger;
 import java.util.UUID;
 
@@ -38,9 +32,6 @@ public class Authenticate extends IntentService
 
     // SharedPreferences used for sending the encrypted face
     private SharedPreferences sharedPref;
-
-    // FTP client for transferring files between the phone and the server
-//    FTPClient ftpClient;
 
     // Handler to send messages to the user
     Handler handler;
@@ -124,21 +115,6 @@ public class Authenticate extends IntentService
                     });
                 }
 
-//                Log.i(TAG, "Transferring file to Server");
-//                plaintextFilename = createPlaintextFile(stringHist);
-//                if (sendFileToServer(ftpClient, plaintextFilename))
-//                {
-//                    Log.i(TAG, "Transferred file to Server");
-//                    handler.post(new Runnable()
-//                    {
-//                        @Override
-//                        public void run()
-//                        {
-//                            Toast.makeText(Authenticate.this, "Sent non-encrypted file to Server", Toast.LENGTH_LONG).show();
-//                        }
-//                    });
-//                }
-
             } catch (Exception e)
             {
                 Log.e(TAG, "Error: " + e);
@@ -164,136 +140,6 @@ public class Authenticate extends IntentService
         return serverInfo;
     }
 
-//    /**
-//     * Attempt a connection with the provided information
-//     *
-//     * @param ftpClient  the FTP client used for connecting with the server
-//     * @param serverInfo the server's information containing address, port, username, and password
-//     * @return boolean as to whether or not a connection was made
-//     */
-//    private boolean canConnect(FTPClient ftpClient, String[] serverInfo)
-//    {
-//        boolean canConnect = false;
-//
-//        try
-//        {
-//            Log.i(TAG, "connecting");
-//            // Try to connect with the provided server address and port
-//            ftpClient.connect(serverInfo[0], Integer.parseInt(serverInfo[1]));
-//
-//            Log.i(TAG, "logging in");
-//            // Then try and login with the provided username and password
-//            if (ftpClient.login(serverInfo[2], serverInfo[3]))
-//            {
-//                Log.i(TAG, "logged in");
-//                // Successfully connected
-//                canConnect = true;
-//                handler.post(new Runnable()
-//                {
-//                    @Override
-//                    public void run()
-//                    {
-//                        Toast.makeText(Authenticate.this, "Successfully connected to the server", Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//            } else
-//            {
-//                // Disconnect from the FTP client quietly
-//                try
-//                {
-//                    ftpClient.logout();
-//                    ftpClient.disconnect();
-//                } catch (Exception ex)
-//                {
-//
-//                }
-//            }
-//        } catch (Exception e)
-//        {
-//            // Could not connect or login properly
-//            handler.post(new Runnable()
-//            {
-//                @Override
-//                public void run()
-//                {
-//                    Toast.makeText(Authenticate.this, "Could not connect/login to server", Toast.LENGTH_LONG).show();
-//                }
-//            });
-//
-//            // Disconnect from the FTP client quietly
-//            try
-//            {
-//                ftpClient.logout();
-//                ftpClient.disconnect();
-//            } catch (Exception ex)
-//            {
-//
-//            }
-//        }
-//
-//        return canConnect;
-//    }
-//
-//    /**
-//     * Send a file from the Android phone to the FTP server
-//     * @param ftpClient information regarding the connected server
-//     * @param filename name of the file to be sent
-//     * @return boolean whether the file was successfully sent
-//     */
-//    private boolean sendFileToServer(FTPClient ftpClient, String filename)
-//    {
-//        try
-//        {
-//            InputStream input = new FileInputStream(filename);
-//            String name = filename.split("/")[filename.split("/").length - 1];
-//            name = "/ftp/".concat(name);
-//            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-//            ftpClient.setFileTransferMode(FTP.STREAM_TRANSFER_MODE);
-//            ftpClient.storeFile(name, input);
-//
-//            int reply = ftpClient.getReplyCode();
-//            if (!FTPReply.isPositiveCompletion(reply))
-//            {
-//                Log.e(TAG, "Apache Error - Reply Code: " + reply);
-//
-//                ftpClient.logout();
-//                ftpClient.disconnect();
-//
-//                return false;
-//            } else
-//            {
-//                Log.d(TAG, "Successfully transferred file");
-//
-//                input.close();
-//
-//                return true;
-//            }
-//        } catch (Exception e)
-//        {
-//            Log.e(TAG, "Error: " + e);
-//
-//            return false;
-//        }
-//    }
-//
-//    /***
-//     * Disconnects from the FTP Server
-//     * @param ftpClient information regarding the connected server
-//     */
-//    private void ftpDisconnect(FTPClient ftpClient)
-//    {
-//        try
-//        {
-//            // Logout and then disconnect
-//            ftpClient.logout();
-//            ftpClient.disconnect();
-//        } catch (Exception e)
-//        {
-//            Log.e(TAG, "Error: " + e);
-//        }
-//    }
-
-
     private String[] getTimestampedID()
     {
         String[] timestampedID = new String[2];
@@ -318,54 +164,6 @@ public class Authenticate extends IntentService
         return timestampedID;
     }
 
-//    private String[] getPublicKey(FTPClient ftpClient)
-//    {
-//        String[] publicKey = null;
-//
-//        try
-//        {
-//            OutputStream output = new FileOutputStream(this.getExternalCacheDir() + "/public_key.txt");
-//            ftpClient.retrieveFile("/home/nsh9b3/ftp/public_key.txt", output);
-//            int reply = ftpClient.getReplyCode();
-//            if (!FTPReply.isPositiveCompletion(reply))
-//            {
-//                Log.e(TAG, "Apache Error - Reply Code: " + reply);
-//
-//                ftpClient.logout();
-//                ftpClient.disconnect();
-//
-//                return null;
-//            } else
-//            {
-//                publicKey = readValuesInFile(this.getExternalCacheDir() + "/public_key.txt");
-//            }
-//        } catch (Exception e)
-//        {
-//            Log.e(TAG, "Error: " + e);
-//        }
-//
-//        return publicKey;
-//    }
-
-//    private String[] readValuesInFile(String filename)
-//    {
-//        String[] tokens = null;
-//        String line = null;
-//
-//        BufferedReader reader;
-//        try
-//        {
-//            reader = new BufferedReader(new FileReader(filename));
-//
-//            line = reader.readLine();
-//            tokens = line.split(" ");
-//        } catch (Exception e)
-//        {
-//
-//        }
-//
-//        return tokens;
-//    }
 
     /**
      * Encrypts the unique identifier and the histogram
