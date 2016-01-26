@@ -24,7 +24,7 @@ public class JavaLBP
 
     // Generated Histogram
     int[][] histogram;
-    byte[] byteHist;
+    byte[][] concatHist;
 
     // Default values for simple LBP
     private final int radius = 1;
@@ -183,26 +183,45 @@ public class JavaLBP
 
     private void convertToBytes(int[] intHist)
     {
-        byteHist = new byte[(int) Math.ceil(intHist.length * 1.5)];
-        int index = 0;
-        byte top = 0x00;
-        byte bot;
-        for(int i = 0; i < intHist.length; i++)
+        concatHist = new byte[(int)Math.ceil(intHist.length / 85.0)][(int)Math.ceil(85*1.5)];
+        boolean isDone = false;
+        int iterations = 0;
+        while(!isDone)
         {
-            int current = intHist[i];
-            if(i % 2 == 0)
+            byte[] byteHist = new byte[(int)Math.ceil(85*1.5)];
+            int index = 0;
+            byte top = 0x00;
+            byte bot;
+            for (int i = 0; i < 85; i++)
             {
-                bot = (byte) (current >>> 8);
-                byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
-                top = (byte) current;
-                bot = (byte) current;
-                byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
-            } else
+                int current;
+                if((i+iterations*85) < intHist.length)
+                    current = intHist[i+iterations*85];
+                else
+                {
+                    isDone = true;
+                    break;
+                }
+
+                if (i % 2 == 0)
+                {
+                    bot = (byte) (current >>> 8);
+                    byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
+                    top = (byte) current;
+                    bot = (byte) current;
+                    byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
+                } else
+                {
+                    top = (byte) (current >>> 4);
+                    bot = (byte) (current >>> 4);
+                    byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
+                    top = (byte) (current << 4);
+                }
+            }
+            concatHist[iterations++] = byteHist;
+            if(iterations == (int)Math.ceil(intHist.length / 85.0))
             {
-                top = (byte) (current >>> 4);
-                bot = (byte) (current >>> 4);
-                byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
-                top = (byte) (current << 4);
+                isDone = true;
             }
         }
 //        BigInteger test = new BigInteger(Arrays.copyOfRange(byteHist, 0, 128));
@@ -218,9 +237,9 @@ public class JavaLBP
         return histogram;
     }
 
-    public byte[] getByteHist()
+    public byte[][] getConcatHist()
     {
-        return byteHist;
+        return concatHist;
     }
 
     /**

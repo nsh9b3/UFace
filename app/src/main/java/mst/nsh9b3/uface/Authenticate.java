@@ -23,7 +23,7 @@ import java.util.UUID;
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
- * <p>
+ * <p/>
  * TODO: Customize class - update intent actions and extra parameters.
  */
 public class Authenticate extends IntentService
@@ -80,7 +80,7 @@ public class Authenticate extends IntentService
 
             Log.i(TAG, "Getting Histogram");
             // Get the generated histogram
-            byte[] byteHist = LBP.getByteHist();
+            byte[][] concatHist = LBP.getConcatHist();
 
             Log.i(TAG, "Creating TimestampedID");
             // Get the timestampedID
@@ -95,11 +95,13 @@ public class Authenticate extends IntentService
 
             // FilePath for non-encrypted file (if used)
             String plaintextFilename = null;
+
+            String readablePlaintextFilename = null;
             try
             {
                 Log.i(TAG, "Encrypting");
                 // Encrypt the the values using the public key
-                encryptedFilename = encryptHistogram(publicKey, timestampedID, byteHist);
+                encryptedFilename = encryptHistogram(publicKey, timestampedID, concatHist);
 
                 // Send the file to the server for further processing
                 Log.i(TAG, "Transferring file to Server");
@@ -116,8 +118,22 @@ public class Authenticate extends IntentService
                     });
                 }
 
-                plaintextFilename = createPlaintextFile(timestampedID, byteHist);
+                plaintextFilename = createPlaintextFile(timestampedID, concatHist);
                 if (ftp.sendFileToServer(plaintextFilename))
+                {
+                    Log.i(TAG, "Transferred file to Server");
+                    handler.post(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            Toast.makeText(Authenticate.this, "FINISHED", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+
+                readablePlaintextFilename = createPlaintextFileReadable(timestampedID, concatHist);
+                if (ftp.sendFileToServer(readablePlaintextFilename))
                 {
                     Log.i(TAG, "Transferred file to Server");
                     handler.post(new Runnable()
@@ -134,7 +150,7 @@ public class Authenticate extends IntentService
             {
                 Log.e(TAG, "Error: " + e);
             }
-            ftp.ftpDisconnect();
+//            ftp.ftpDisconnect();
         }
     }
 
@@ -325,6 +341,71 @@ public class Authenticate extends IntentService
         return outputFile.getAbsolutePath();
     }
 
+    private String encryptHistogram(String[] publicKey, String timeStampedID, byte[][] histogram) throws Exception
+    {
+        // Create a cryptosystem for encryption
+        PaillierEncryption paillerCryptosystem = new PaillierEncryption(publicKey[0], publicKey[1], publicKey[2]);
+
+        // m = message, c = ciphertext
+        BigInteger m;
+        BigInteger[] c = new BigInteger[histogram.length + 1];
+
+        int index = 0;
+
+        Log.i(TAG, "Encrypting the timestampedID");
+        // Encrypt the timestampedID values first
+        m = new BigInteger(timeStampedID);
+        c[index++] = paillerCryptosystem.Encryption(m);
+
+        Log.i(TAG, "Encrypting the histogram");
+        // Encrypt each value in the histogram
+        for (int i = 0; i < histogram.length; i++)
+        {
+            m = new BigInteger(histogram[i]);
+            c[index++] = paillerCryptosystem.Encryption(m);
+        }
+
+        // Write the ciphertext to a File
+        File outputDir = this.getExternalCacheDir(); // context being the Activity pointer
+        File outputFile = null;
+        try
+        {
+            outputFile = File.createTempFile("encryptedHistogram", ".txt", outputDir);
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+
+            return null;
+        }
+
+        BufferedWriter writer = null;
+        try
+        {
+            writer = new BufferedWriter(new FileWriter(outputFile.getAbsoluteFile()));
+            for (int i = 0; i < c.length; i++)
+            {
+                writer.write(c[i] + " ");
+            }
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+            return null;
+        } finally
+        {
+            try
+            {
+                if (writer != null)
+                {
+                    writer.close();
+                }
+            } catch (IOException e)
+            {
+                Log.e(TAG, "Error: " + e);
+            }
+        }
+        return outputFile.getAbsolutePath();
+    }
+
     private String createPlaintextFile(String[][] histogram)
     {
         // Write the plaintet to a File
@@ -394,6 +475,98 @@ public class Authenticate extends IntentService
             for (int i = 0; i < histogram.length; i++)
             {
                 writer.write(Integer.toBinaryString(histogram[i] & 0xff).replace(' ', '0') + " ");
+            }
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+            return null;
+        } finally
+        {
+            try
+            {
+                if (writer != null)
+                {
+                    writer.close();
+                }
+            } catch (IOException e)
+            {
+                Log.e(TAG, "Error: " + e);
+            }
+        }
+        return outputFile.getAbsolutePath();
+    }
+
+    private String createPlaintextFile(String timestampedID, byte[][] histogram)
+    {
+        // Write the plaintet to a File
+        File outputDir = this.getExternalCacheDir(); // context being the Activity pointer
+        File outputFile = null;
+        try
+        {
+            outputFile = File.createTempFile("plaintextHistogram", ".txt", outputDir);
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+
+            return null;
+        }
+
+        BufferedWriter writer = null;
+        try
+        {
+            writer = new BufferedWriter(new FileWriter(outputFile.getAbsoluteFile()));
+            writer.write(timestampedID + " ");
+            for (int i = 0; i < histogram.length; i++)
+            {
+                for (int k = 0; k < histogram[i].length; k++)
+                {
+                    writer.write(Integer.toBinaryString(histogram[i][k] & 0xff).replace(' ', '0') + " ");
+                }
+            }
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+            return null;
+        } finally
+        {
+            try
+            {
+                if (writer != null)
+                {
+                    writer.close();
+                }
+            } catch (IOException e)
+            {
+                Log.e(TAG, "Error: " + e);
+            }
+        }
+        return outputFile.getAbsolutePath();
+    }
+
+    private String createPlaintextFileReadable(String timestampedID, byte[][] histogram)
+    {
+        // Write the plaintet to a File
+        File outputDir = this.getExternalCacheDir(); // context being the Activity pointer
+        File outputFile = null;
+        try
+        {
+            outputFile = File.createTempFile("readableHistogram", ".txt", outputDir);
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Error: " + e);
+
+            return null;
+        }
+
+        BufferedWriter writer = null;
+        try
+        {
+            writer = new BufferedWriter(new FileWriter(outputFile.getAbsoluteFile()));
+            writer.write(timestampedID + " ");
+            for (int i = 0; i < histogram.length; i++)
+            {
+                BigInteger m = new BigInteger(histogram[i]);
+                writer.write(m.toString() + " ");
             }
         } catch (Exception e)
         {
