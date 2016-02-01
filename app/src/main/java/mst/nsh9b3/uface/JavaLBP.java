@@ -4,8 +4,6 @@ import android.util.Log;
 
 import org.opencv.core.Mat;
 
-import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -25,6 +23,7 @@ public class JavaLBP
     // Generated Histogram
     int[][] histogram;
     byte[][] concatHist;
+    byte[][] byteMatrix;
 
     // Default values for simple LBP
     private final int radius = 1;
@@ -74,7 +73,8 @@ public class JavaLBP
 
         // Convert to bytes and combine into sections so that less encryptions occur
         int[] histValues = getIntArray(histogram);
-        convertToBytes(histValues);
+//        convertToBytes(histValues);
+        testToBytes(histValues);
     }
 
     private int[] getIntArray(int[][] histogram)
@@ -227,14 +227,159 @@ public class JavaLBP
 //        BigInteger test = new BigInteger(Arrays.copyOfRange(byteHist, 0, 128));
     }
 
+    private void testToBytes(int[] intHist)
+    {
+        // Number of pixels in entire grid
+        int pixelsInGrid = TakePicture.IMAGEHEIGHT * TakePicture.IMAGEWIDTH;
+
+        // Number of pixels in 1 section of the grid
+        int pixelsPerSection = pixel_height_per_grid * pixel_width_per_grid;
+
+        // Number of bits needed to represent section of the grid
+        int maxBits = (int)(Math.log(pixelsPerSection)/ Math.log(2));
+
+        // Number of bytes needed per array of the Matrix below (Cols)
+        int bytesNeeded = PaillierEncryption.number_of_bits / 8;
+
+        // Number of integers for every byte array
+        float numInts = PaillierEncryption.number_of_bits / (float) maxBits;
+
+        // Check if numInts has a decimal place
+        if(numInts == (int) numInts)
+        {
+            numInts--;
+        }
+
+        // Create byte matrix
+        byteMatrix = new byte[(int)Math.ceil(intHist.length / numInts)][bytesNeeded];
+
+        // Create byte array (these are the arrays set in the matrix above
+        byte[] byteArray = new byte[bytesNeeded];
+
+        // This is the first bit position that needs to be updated in the byte array
+        int bitPos = 0;
+
+        // This is set to true if the first byte needs to be all zeroes (to avoid error in encryption)
+        boolean firstEmpty = false;
+
+        // This is the number of bits that need to be skipped to avoid getting a negative number
+        int skipBits = (PaillierEncryption.number_of_bits % maxBits);
+
+        // Figure out where to start
+        if(skipBits > 8)
+        {
+            // This may not work... idk.  But it won't get called for 1024 or 2048 bit key
+            firstEmpty = true;
+            bitPos = (16 - skipBits) - 1;
+        }
+        else if(skipBits == 8 || skipBits == 0)
+        {
+            // This is if the amount of ints that can be placed into a single BigInteger has no decimal place
+            firstEmpty = true;
+            bitPos = 7;
+        }
+        else
+        {
+            bitPos = (8 - skipBits) - 1;
+        }
+
+        // This byte is used to check if a specific bit is set or not
+        byte andByte = 0x01;
+
+        // This is the next byte to be added to byteArray
+        byte nextByte = 0x00;
+
+        // This is the current index of the byteArray
+        int arrayIndex = 0;
+
+        // This is the current index of the byteMatrix
+        int matrixIndex = 0;
+
+        // This is set when the matrix becomes properly filled
+        boolean isDone = false;
+
+        // Both the for loops just go through every bit
+        // First loop is to make sure the alogorithm keeps filling the matrix even when there are no more numbers in inthist
+        int i = 0;
+        while(!isDone)
+        {
+            // Get the current value if there is a value to get
+            int value = 0;
+            if(i < intHist.length)
+            {
+                value = intHist[i];
+            }
+
+            // For every bit needed to represent value
+            for(int k = maxBits - 1; k >= 0; k--)
+            {
+                // Check if we need to skip the first byte in byteArray
+                // This should only happen in a few settings: 1024 bit key and a grid size of 1
+                if(firstEmpty && arrayIndex == 0)
+                {
+                    byteArray[arrayIndex++] = nextByte;
+                }
+                // Check the specific bit of value
+                if(((value >> k) & andByte) == 1)
+                {
+                    // if 1, set the proper bit in nextByte
+                    nextByte |= (1 << bitPos);
+                }
+                // Always reduce the bit position by 1
+                bitPos--;
+
+                // If the bitPos is less than 0, then add nextByte to byteArray and reset values
+                if(bitPos < 0)
+                {
+                    byteArray[arrayIndex++] = nextByte;
+                    bitPos = 7;
+                    nextByte = 0x00;
+                }
+                // If the array has been filled add it to the matrix and repeat
+                if(arrayIndex == bytesNeeded)
+                {
+                    byteMatrix[matrixIndex++] = byteArray;
+                    byteArray = new byte[bytesNeeded];
+                    arrayIndex = 0;
+
+                    if(matrixIndex == (int)Math.ceil(intHist.length / numInts))
+                    {
+                        isDone = true;
+                    }
+
+                    // Figure out where to start again
+                    if(skipBits > 8)
+                    {
+                        // This may not work... idk.  But it won't get called for 1024 or 2048 bit key
+                        bitPos = (16 - skipBits) - 1;
+                    }
+                    else if(skipBits == 8 || skipBits == 0)
+                    {
+                        // This is if the amount of ints that can be placed into a single BigInteger has no decimal place
+                        bitPos = 7;
+                    }
+                    else
+                    {
+                        bitPos = (8 - skipBits) - 1;
+                    }
+
+                }
+
+            }
+            i++;
+        }
+//        BigInteger test = new BigInteger(Arrays.copyOfRange(byteHist, 0, 128));
+    }
+
+
     /**
      * Returns the histogram
      *
      * @return int[][] histogram[grid_size][59]
      */
-    public int[][] getHistogram()
+    public byte[][] getHistogram()
     {
-        return histogram;
+        return byteMatrix;
     }
 
     public byte[][] getConcatHist()

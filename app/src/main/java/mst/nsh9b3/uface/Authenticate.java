@@ -80,7 +80,7 @@ public class Authenticate extends IntentService
 
             Log.i(TAG, "Getting Histogram");
             // Get the generated histogram
-            byte[][] concatHist = LBP.getConcatHist();
+            byte[][] concatHist = LBP.getHistogram();
 
             Log.i(TAG, "Creating TimestampedID");
             // Get the timestampedID
