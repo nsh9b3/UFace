@@ -1,7 +1,5 @@
 package mst.nsh9b3.uface;
 
-import android.util.Log;
-
 import org.opencv.core.Mat;
 
 import java.util.HashMap;
@@ -22,12 +20,11 @@ public class JavaLBP
 
     // Generated Histogram
     int[][] histogram;
-    byte[][] concatHist;
     byte[][] byteMatrix;
 
     // Default values for simple LBP
-    private final int radius = 1;
-    private final int neighbors = 8;
+//    private final int radius = 1;
+//    private final int neighbors = 8;
     private static final int grid_size = 16;
     private static final int pixel_width_per_grid = TakePicture.IMAGEWIDTH / (grid_size / (int) Math.sqrt(grid_size));
     private static final int pixel_height_per_grid = TakePicture.IMAGEHEIGHT / (grid_size / (int) Math.sqrt(grid_size));
@@ -72,9 +69,7 @@ public class JavaLBP
         }
 
         // Convert to bytes and combine into sections so that less encryptions occur
-        int[] histValues = getIntArray(histogram);
-//        convertToBytes(histValues);
-        testToBytes(histValues);
+        testToBytes(getIntArray(histogram));
     }
 
     private int[] getIntArray(int[][] histogram)
@@ -170,63 +165,6 @@ public class JavaLBP
         return histSec;
     }
 
-    private String[] convertToStrings(int[] intHist)
-    {
-        String[] stringHist = new String[intHist.length];
-        for (int i = 0; i < stringHist.length; i++)
-        {
-            stringHist[i] = String.valueOf(intHist[i]);
-        }
-
-        return stringHist;
-    }
-
-    private void convertToBytes(int[] intHist)
-    {
-        concatHist = new byte[(int)Math.ceil(intHist.length / 85.0)][(int)Math.ceil(85*1.5)];
-        boolean isDone = false;
-        int iterations = 0;
-        while(!isDone)
-        {
-            byte[] byteHist = new byte[(int)Math.ceil(85*1.5)];
-            int index = 0;
-            byte top = 0x00;
-            byte bot;
-            for (int i = 0; i < 85; i++)
-            {
-                int current;
-                if((i+iterations*85) < intHist.length)
-                    current = intHist[i+iterations*85];
-                else
-                {
-                    isDone = true;
-                    break;
-                }
-
-                if (i % 2 == 0)
-                {
-                    bot = (byte) (current >>> 8);
-                    byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
-                    top = (byte) current;
-                    bot = (byte) current;
-                    byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
-                } else
-                {
-                    top = (byte) (current >>> 4);
-                    bot = (byte) (current >>> 4);
-                    byteHist[index++] = (byte) ((top & 0xF0) | (bot & 0x0F));
-                    top = (byte) (current << 4);
-                }
-            }
-            concatHist[iterations++] = byteHist;
-            if(iterations == (int)Math.ceil(intHist.length / 85.0))
-            {
-                isDone = true;
-            }
-        }
-//        BigInteger test = new BigInteger(Arrays.copyOfRange(byteHist, 0, 128));
-    }
-
     private void testToBytes(int[] intHist)
     {
         // Number of pixels in entire grid
@@ -236,7 +174,7 @@ public class JavaLBP
         int pixelsPerSection = pixel_height_per_grid * pixel_width_per_grid;
 
         // Number of bits needed to represent section of the grid
-        int maxBits = (int)(Math.log(pixelsPerSection)/ Math.log(2));
+        int maxBits = (int)(Math.log(pixelsPerSection)/ Math.log(2)) + 1;
 
         // Number of bytes needed per array of the Matrix below (Cols)
         int bytesNeeded = PaillierEncryption.number_of_bits / 8;
@@ -266,6 +204,7 @@ public class JavaLBP
         int skipBits = (PaillierEncryption.number_of_bits % maxBits);
 
         // Figure out where to start
+        // This first one should NEVER happen, probably won't work if it does to be honest
         if(skipBits > 8)
         {
             // This may not work... idk.  But it won't get called for 1024 or 2048 bit key
@@ -348,6 +287,7 @@ public class JavaLBP
                     }
 
                     // Figure out where to start again
+                    // Again, this first condition should NEVER occur
                     if(skipBits > 8)
                     {
                         // This may not work... idk.  But it won't get called for 1024 or 2048 bit key
@@ -368,7 +308,6 @@ public class JavaLBP
             }
             i++;
         }
-//        BigInteger test = new BigInteger(Arrays.copyOfRange(byteHist, 0, 128));
     }
 
 
@@ -380,11 +319,6 @@ public class JavaLBP
     public byte[][] getHistogram()
     {
         return byteMatrix;
-    }
-
-    public byte[][] getConcatHist()
-    {
-        return concatHist;
     }
 
     /**
