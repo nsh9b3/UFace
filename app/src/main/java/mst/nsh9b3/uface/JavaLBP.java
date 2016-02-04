@@ -69,9 +69,14 @@ public class JavaLBP
         }
 
         // Convert to bytes and combine into sections so that less encryptions occur
-        testToBytes(getIntArray(histogram));
+        histToByteMatrix(getIntArray(histogram));
     }
 
+    /**
+     * This turns the matrix generated above into an array of ints
+     * @param histogram the histogram generated
+     * @return int[] which is an array of ints that represents the histogram
+     */
     private int[] getIntArray(int[][] histogram)
     {
         int[] histValues = new int[grid_size * BINS];
@@ -87,6 +92,14 @@ public class JavaLBP
         return histValues;
     }
 
+    /**
+     * This generates a histogram for a section of the grid
+     * @param row the start row location
+     * @param column the start col location
+     * @param atTop if this section of the grid is at the top of the image
+     * @param atLeft if this section of the grid is at the left most side of the image
+     * @return int[] which is the histogram generated for 1 section of the image
+     */
     private int[] generateLocalHistogram(int row, int column, boolean atTop, boolean atLeft)
     {
         // This grids histogram
@@ -155,6 +168,7 @@ public class JavaLBP
                     value |= 1;
 
                 // Place the value in the correct spot in the array based off the keys
+                // If the value is not uniform value, throw it into the last bin
                 if (histogramKeys.get((value & 0xFF)) != null)
                     histSec[histogramKeys.get((value & 0xFF))]++;
                 else
@@ -165,11 +179,8 @@ public class JavaLBP
         return histSec;
     }
 
-    private void testToBytes(int[] intHist)
+    private void histToByteMatrix(int[] intHist)
     {
-        // Number of pixels in entire grid
-        int pixelsInGrid = TakePicture.IMAGEHEIGHT * TakePicture.IMAGEWIDTH;
-
         // Number of pixels in 1 section of the grid
         int pixelsPerSection = pixel_height_per_grid * pixel_width_per_grid;
 

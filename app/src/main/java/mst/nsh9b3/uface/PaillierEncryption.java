@@ -54,8 +54,6 @@ public class PaillierEncryption
         this.bitLength = Integer.parseInt(bitLengthString);
         this.lambda = new BigInteger(lamdaString);
         this.u = new BigInteger(uString);
-
-
     }
 
     private void KeyGeneration(int bitLengthVal, int certainty)
@@ -95,7 +93,6 @@ public class PaillierEncryption
     {
         // c = g^m * r^n mod n^2
         BigInteger encyptedValue = g.modPow(m, nsquare).multiply(r.modPow(n, nsquare)).mod(nsquare);
-//        Log.d(TAG, "EncryptedValue: " + encyptedValue.toString());
         return encyptedValue;
     }
 
@@ -165,17 +162,4 @@ public class PaillierEncryption
 
         return r;
     }
-
-    public void publicKey()
-    {
-        Log.d(TAG, "n: " + n.toString());
-        Log.d(TAG, "g: " + g.toString());
-    }
-
-    public void privateKey()
-    {
-        Log.d(TAG, "l: " + lambda.toString());
-        Log.d(TAG, "u: " + u.toString());
-    }
-
 }

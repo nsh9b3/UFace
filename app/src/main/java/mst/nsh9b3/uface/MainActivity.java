@@ -4,17 +4,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
-
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
 
 public class MainActivity extends Activity
 {
@@ -42,22 +37,6 @@ public class MainActivity extends Activity
 
         // Set the Mat containing the image of the face to null initially
         faceMat = null;
-
-
-        int testValue = 3254;
-        Log.d(TAG, Integer.toBinaryString(testValue & 0xFFF).replace(' ', '0'));
-        Log.d(TAG, Integer.toBinaryString((testValue >>> 8) ).replace(' ', '0') + "");
-        Log.d(TAG, Integer.toBinaryString((testValue >>> 4) & 0x0f).replace(' ','0') + "");
-        Log.d(TAG, Integer.toBinaryString(((testValue >>> 4) & 0xf0) | ((testValue >>> 4) & 0x0f)).replace(' ', '0') + "");
-
-//        BigInteger test = new BigInteger(new byte[]{(byte)255, (byte)102});
-////        for(int i = 0; i < 8; i++)
-////            test = test.setBit(i);
-//        byte[] solution = test.toByteArray();
-//        for(int i = 0; i < solution.length; i++)
-//        {
-//            Log.d(TAG, "" + String.format("%8s", Integer.toBinaryString(solution[i] & 0xFF)).replace(' ', '0'));
-//        }
     }
 
     /**

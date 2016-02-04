@@ -111,6 +111,10 @@ public class FTP
         }
     }
 
+    /**
+     * Downloads the public key information from the server
+     * @return String[] contains the public key information: n, g, bitlength
+     */
     public String[] getPublicKey()
     {
         String[] publicKey = null;
