@@ -199,8 +199,10 @@ public class JavaLBP
             numInts--;
         }
 
+        int matrixSize = (int)Math.ceil((float)(intHist.length / Math.floor(numInts)));
+
         // Create byte matrix
-        byteMatrix = new byte[(int)Math.ceil(intHist.length / numInts)][bytesNeeded];
+        byteMatrix = new byte[matrixSize][bytesNeeded];
 
         // Create byte array (these are the arrays set in the matrix above
         byte[] byteArray = new byte[bytesNeeded];
@@ -292,7 +294,7 @@ public class JavaLBP
                     byteArray = new byte[bytesNeeded];
                     arrayIndex = 0;
 
-                    if(matrixIndex == (int)Math.ceil(intHist.length / numInts))
+                    if(matrixIndex == matrixSize)
                     {
                         isDone = true;
                     }
