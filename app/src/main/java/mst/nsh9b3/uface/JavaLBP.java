@@ -45,12 +45,17 @@ public class JavaLBP
         generateKeyMappings(histogramKeys);
 
         int index = 0;
+
         for (int i = 0; i < grid_size / (int) Math.sqrt(grid_size); i++)
         {
             // check if this pixel grid is at the top of the image
             boolean isTop = false;
             if (i == 0)
                 isTop = true;
+
+            boolean isBot = false;
+            if(i == (grid_size / (int) Math.sqrt(grid_size)) - 1)
+                isBot = true;
 
             // Get the column
             for (int k = 0; k < grid_size / (int) Math.sqrt(grid_size); k++)
@@ -60,8 +65,12 @@ public class JavaLBP
                 if (k == 0)
                     isLeft = true;
 
+                boolean isRight = false;
+                if (k == (grid_size / (int) Math.sqrt(grid_size))- 1)
+                    isRight = true;
+
                 // Generate the histogram for this section of the grid
-                int[] histSec = generateLocalHistogram(i, k, isTop, isLeft);
+                int[] histSec = generateLocalHistogram(i, k, isTop, isBot, isLeft, isRight);
 
                 // Append this section's histogram to the main histogram
                 histogram[index++] = histSec;
@@ -100,7 +109,7 @@ public class JavaLBP
      * @param atLeft if this section of the grid is at the left most side of the image
      * @return int[] which is the histogram generated for 1 section of the image
      */
-    private int[] generateLocalHistogram(int row, int column, boolean atTop, boolean atLeft)
+    private int[] generateLocalHistogram(int row, int column, boolean atTop, boolean atBot, boolean atLeft, boolean atRight)
     {
         // This grids histogram
         int[] histSec = new int[BINS];
@@ -112,8 +121,8 @@ public class JavaLBP
         // Get grid dimensions
         int startRow = row * pixel_width_per_grid;
         int startCol = column * pixel_height_per_grid;
-        int endRow = (row + 1) * pixel_width_per_grid - 1;
-        int endCol = (column + 1) * pixel_height_per_grid - 1;
+        int endRow = (row + 1) * pixel_width_per_grid;
+        int endCol = (column + 1) * pixel_height_per_grid;
 
         // LBP needs to start 1 row lower to avoid seg faults
         int startLBPRow;
@@ -129,10 +138,22 @@ public class JavaLBP
         else
             startLBPCol = startCol;
 
+        int endLBPRow;
+        if(atBot)
+            endLBPRow = endRow - 1;
+        else
+            endLBPRow = endRow;
+
+        int endLBPCol;
+        if(atRight)
+            endLBPCol = endCol - 1;
+        else
+            endLBPCol = endCol;
+
         // LBP algorithm
-        for (int i = startLBPCol; i < endCol; i++)
+        for (int i = startLBPCol; i < endLBPCol; i++)
         {
-            for (int k = startLBPRow; k < endRow; k++)
+            for (int k = startLBPRow; k < endLBPRow; k++)
             {
                 int center = (int) faceMat.get(k, i)[0];
 
@@ -217,10 +238,8 @@ public class JavaLBP
         int skipBits = (PaillierEncryption.number_of_bits % maxBits);
 
         // Figure out where to start
-        // This first one should NEVER happen, probably won't work if it does to be honest
         if(skipBits > 8)
         {
-            // This may not work... idk.  But it won't get called for 1024 or 2048 bit key
             firstEmpty = true;
             bitPos = (16 - skipBits) - 1;
         }
@@ -300,7 +319,6 @@ public class JavaLBP
                     }
 
                     // Figure out where to start again
-                    // Again, this first condition should NEVER occur
                     if(skipBits > 8)
                     {
                         // This may not work... idk.  But it won't get called for 1024 or 2048 bit key
